@@ -18,20 +18,6 @@ LoopStruct.loopNum[obj.layer]={
     zNum = obj.track2,
 }
 
-
-@Option_Alignment
---track0:x整列方法,1,3,1,1
---track1:y整列方法,1,3,1,1
---track2:z整列方法,1,3,1,1
-
-LoopStruct = LoopStruct or {}
-LoopStruct.loopAli = LoopStruct.loopAli or {}
-LoopStruct.loopAli[obj.layer]={
-    xAl = obj.track0,
-    yAl = obj.track1,
-    zAl = obj.track2,
-}
-
 @Option_Interval
 --track0:x間隔,0,1000,30
 --track1:y間隔,0,1000,30
@@ -56,6 +42,19 @@ LoopStruct.loopOffset[obj.layer]={
     xOffset = obj.track0,
     yOffset = obj.track1,
     zOffset = obj.track2,
+}
+
+@Option_Alignment
+--track0:x整列方法,1,3,1,1
+--track1:y整列方法,1,3,1,1
+--track2:z整列方法,1,3,1,1
+
+LoopStruct = LoopStruct or {}
+LoopStruct.loopAli = LoopStruct.loopAli or {}
+LoopStruct.loopAli[obj.layer]={
+    xAl = obj.track0,
+    yAl = obj.track1,
+    zAl = obj.track2,
 }
 
 @Option_Mirror
