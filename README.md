@@ -1,6 +1,6 @@
 # LoopMod
 
-nea氏(https://github.com/nea-c)の開発したLoopスクリプトを個人的に使いやすくするべく改造しました。 
+nea氏(https://github.com/nea-c) の開発したLoopスクリプトを個人的に使いやすくするべく改造しました。 
 
 素敵なスクリプトを開発してくださったnea氏に感謝を。 
 
