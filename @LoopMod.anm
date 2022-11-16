@@ -1,0 +1,324 @@
+--[[
+nea氏(https://github.com/nea-c)の開発したLoopスクリプトを個人的に使いやすくするべく改造しました。
+素敵なスクリプトを開発してくださったnea氏に感謝を。
+元ソース:https://github.com/nea-c/AviUtl-Scripts/tree/master/Loop
+個人利用用途で開発したのでソースコードグダグダです。すまん…
+]]
+
+@Option_loopNum
+--track0:x個数,1,100,1,1
+--track1:y個数,1,100,1,1
+--track2:z個数,1,100,1,1
+
+LoopStruct = LoopStruct or {}
+LoopStruct.loopNum = LoopStruct.loopNum or {}
+LoopStruct.loopNum[obj.layer]={
+    xNum = obj.track0,
+    yNum = obj.track1,
+    zNum = obj.track2,
+}
+
+
+@Option_Alignment
+--track0:x整列方法,1,3,1,1
+--track1:y整列方法,1,3,1,1
+--track2:z整列方法,1,3,1,1
+
+LoopStruct = LoopStruct or {}
+LoopStruct.loopAli = LoopStruct.loopAli or {}
+LoopStruct.loopAli[obj.layer]={
+    xAl = obj.track0,
+    yAl = obj.track1,
+    zAl = obj.track2,
+}
+
+@Option_Interval
+--track0:x間隔,0,1000,30
+--track1:y間隔,0,1000,30
+--track2:z間隔,0,1000,30
+
+LoopStruct = LoopStruct or {}
+LoopStruct.loopInter = LoopStruct.loopInter or {}
+LoopStruct.loopInter[obj.layer]={
+    xInter = obj.track0,
+    yInter = obj.track1,
+    zInter = obj.track2,
+}
+
+@Option_Offset
+--track0:xずれ,-1000,1000,0
+--track1:yずれ,-1000,1000,0
+--track2:zずれ,-1000,1000,0
+
+LoopStruct = LoopStruct or {}
+LoopStruct.loopOffset = LoopStruct.loopOffset or {}
+LoopStruct.loopOffset[obj.layer]={
+    xOffset = obj.track0,
+    yOffset = obj.track1,
+    zOffset = obj.track2,
+}
+
+@Option_Mirror
+--track0:x反転,0,1,1,1
+--track1:y反転,0,1,1,1
+--track2:z反転,0,1,1,1
+
+LoopStruct = LoopStruct or {}
+LoopStruct.loopMirror = LoopStruct.loopMirror or {}
+LoopStruct.loopMirror[obj.layer]={
+    xMirror = obj.track0,
+    yMirror = obj.track1,
+    zMirror = obj.track2,
+}
+
+
+
+@MainDraw
+--check0:個別オブジェクト,0
+--dialog:個数,_1={3,3,1};整列,_2={3,3,3};反転,_3={0,0,0};数0以下時 -2,_4={0,0,0};間隔,_5={100,100,100};ｵﾌｾｯﾄ,_6={0,0,0};Zｻｲｽﾞ,_7=1;個別基準,_8=0;
+
+local function f()
+local RM = require("rikky_module")
+if(RM.getinfo("version",2)<"1.4")then error"バージョン1.4以上のRikkyModuleを使用すること"end
+if RM then
+    RM.checkbox(8)
+    RM.list(2,{"これは説明です。OKしないこと。","(1)無効","(2)1列目で中央揃え","(3)全体で中央揃え"})
+end
+local objdata = {}
+local keys = {"ox","oy","oz","rx","ry","rz","zoom","alpha"}
+for k, v in pairs(keys) do
+	objdata[v] = obj[v]
+end
+
+local function Inversion(a)
+	if a then
+		return false
+	else
+		return true
+	end
+end
+
+local function toBoolean(a)
+	if a == 1 then
+		return true
+	else
+		return false
+	end
+end
+
+function table.dcopy(tbl)
+  local orig_type = type(tbl)
+  local copy
+  if orig_type == 'table' then
+      copy = {}
+      for orig_key, orig_value in next, tbl, nil do
+          copy[table.dcopy(orig_key)] = table.dcopy(orig_value)
+      end
+      setmetatable(copy, table.dcopy(getmetatable(tbl)))
+  else -- number, string, boolean, etc
+      copy = tbl
+  end
+  return copy
+end
+
+local nx, ny, nz = 0, 0, 0
+if LoopStruct and LoopStruct.loopNum and LoopStruct.loopNum[obj.layer] then
+  nx = LoopStruct.loopNum[obj.layer].xNum
+  ny = LoopStruct.loopNum[obj.layer].yNum
+  nz = LoopStruct.loopNum[obj.layer].zNum
+else
+  nx = _1[1]
+  ny = _1[2]
+  nz = _1[3]
+end
+
+local align = {}
+if LoopStruct and LoopStruct.loopAli and LoopStruct.loopAli[obj.layer] then
+  align = {
+  LoopStruct.loopAli[obj.layer].xAl,
+  LoopStruct.loopAli[obj.layer].yAl,
+  LoopStruct.loopAli[obj.layer].zAl
+  }
+else
+  align = table.dcopy(_2)
+end
+
+local reverse = {}
+if LoopStruct and LoopStruct.loopMirror and LoopStruct.loopMirror[obj.layer] then
+  reverse = {
+  toBoolean(LoopStruct.loopMirror[obj.layer].xMirror),
+  toBoolean(LoopStruct.loopMirror[obj.layer].yMirror),
+  toBoolean(LoopStruct.loopMirror[obj.layer].zMirror)
+  }
+else
+  reverse = {
+  toBoolean(_3[1]),
+  toBoolean(_3[2]),
+  toBoolean(_3[3])
+  }
+end
+
+local ZeroBorder = {
+  toBoolean(_4[1]),
+  toBoolean(_4[2]),
+  toBoolean(_4[3])
+}
+
+local spacing = {}
+if LoopStruct and LoopStruct.loopInter and LoopStruct.loopInter[obj.layer] then
+  spacing = {
+  LoopStruct.loopInter[obj.layer].xInter,
+  LoopStruct.loopInter[obj.layer].yInter,
+  LoopStruct.loopInter[obj.layer].zInter
+  }
+else
+  spacing = table.dcopy(_5)
+end
+
+local offset = {}
+if LoopStruct and LoopStruct.loopOffset and LoopStruct.loopOffset[obj.layer] then
+  offset = {
+  LoopStruct.loopOffset[obj.layer].xOffset / 100,
+  LoopStruct.loopOffset[obj.layer].yOffset / 100,
+  LoopStruct.loopOffset[obj.layer].zOffset / 100
+  }
+else
+  offset = {
+  _6[1] / 100,
+  _6[2] / 100, 
+  _6[3] / 100
+  }
+end
+
+local sizeZ = _7
+local IndMode = toBoolean(_8)
+
+
+local indiv_objects = obj.check0
+local gx, gy, gz
+local x, y, z = 0, 0, 0
+local def = {0,0,0}
+local ox, oy, oz = obj.ox, obj.oy, obj.oz
+local cx,cy,cz = 0,0,0
+
+if not indiv_objects then
+  obj.effect()
+end
+
+--描画しない条件
+if not (ZeroBorder[1] or ZeroBorder[2] or ZeroBorder[3]) then
+  if nx * ny * nz == 0 or sizeZ <= 0 then
+    obj.draw(0,0,0,0,0)
+    return
+  end
+end
+
+if nx <= 0 then
+  if ZeroBorder[1] then
+    nx = nx - 2
+  end
+	reverse[1] = Inversion(reverse[1])
+end
+if ny <= 0 then
+  if ZeroBorder[2] then
+    ny = ny - 2
+  end
+	reverse[2] = Inversion(reverse[2])
+end
+if nz <= 0 then
+  if ZeroBorder[3] then
+    nz = nz - 2
+  end
+	reverse[3] = Inversion(reverse[3])
+end
+
+local nx, ny, nz = math.abs(nx), math.abs(ny), math.abs(nz)
+
+if IndMode then
+  gx = spacing[1]
+  gy = spacing[2]
+  gz = spacing[3]
+  
+else
+  local w = obj.w
+  local h = obj.h
+  gx = spacing[1] / 100 * w
+  gy = spacing[2] / 100 * h
+  gz = spacing[3] / 100 * sizeZ
+end
+
+for nzi = 0, nz - 1 do
+  for nyi = 0, ny - 1 do
+    for nxi = 0, nx - 1 do
+      
+      
+      if align[1] >= 2 then
+        x = ox + gx * (nxi - (nx - 1) / 2)
+      else
+        x = ox + nxi * gx
+      end
+
+      if reverse[1] then
+        x = x * -1
+      end
+      
+
+      if align[2] >= 2 then
+        y = oy + gy * (nyi - (ny - 1) / 2)
+      else
+        y = oy + nyi * gy
+      end
+      
+      if reverse[2] then
+        y = y * -1
+      end
+      
+
+      if align[3] >= 2 then
+        z = oz + gz * (nzi - (nz - 1) / 2)
+      else
+        z = oz + nzi * gz
+      end
+      
+            
+      if align[1]==3 then
+  			cx = gx * (offset[1] * (ny - 1)) / 2
+			end
+			if align[2]==3 then
+        cy = gy * (offset[2] * (nx - 1)) / 2
+	  	end
+		  if align[3]==3 then
+			  cz = gz * (offset[3] * (nx + ny - 2) / 2) / 2
+			end
+
+      
+      def[1] = x + gx * (offset[1] * nyi) - cx
+      def[2] = y + gy * (offset[2] * nxi) - cy
+      def[3] = z + gz * (offset[3] * (nxi + nyi) / 2) - cz
+        
+      if reverse[3] == 1 then
+        def[3] = def[3] * -1
+      end
+
+      if indiv_objects then
+		    for k, v in pairs(keys) do
+			    obj[v] = objdata[v]
+		    end
+		    obj.ox = obj.ox + def[1]
+		    obj.oy = obj.oy + def[2]
+		    obj.oz = obj.oz + def[3]
+		    RM.effect(((nxi) + (nyi * nx) + (nzi * nx * ny)), nx * ny * nz)
+		    obj.draw()
+      else
+        obj.draw(def[1], def[2], def[3])
+      end
+    end
+  end
+end
+end
+local a,b=pcall(f)
+_1=nil _2=nil _3=nil _4=nil _5=nil _6=nil _7=nil _8=nil
+if a then return end
+setfont("メイリオ",30)
+obj.load("text","Error:\n"..b:match("%[.+%]:(%d+:.*)"))
+obj.draw(0,0,0,math.min(obj.screen_w/obj.w*0.7,1))
